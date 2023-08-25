@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.kenig.vkui.domain.FeedPost
 import com.kenig.vkui.domain.StatisticItem
+import com.kenig.vkui.ui.theme.NavigationItem
 import java.util.Collections.replaceAll
 
 class MainViewModel : ViewModel() {
@@ -15,6 +16,7 @@ class MainViewModel : ViewModel() {
     }
     private val _feedPosts = MutableLiveData<List<FeedPost>>(sourceList)
     val feedPosts: LiveData<List<FeedPost>> = _feedPosts
+    private val _selectedNavItem = MutableLiveData<NavigationItem>(NavigationItem.Home)
 
     fun updateCount(feedPost: FeedPost, item: StatisticItem) {
         val oldPosts = feedPosts.value?.toMutableList() ?: mutableListOf()

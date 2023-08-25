@@ -1,45 +1,42 @@
 package com.kenig.vkui.ui.theme
 
-import PostCard
 import android.annotation.SuppressLint
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.clickable
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.kenig.vkui.MainViewModel
+import com.kenig.vkui.navigation.AppNavGraph
 
-@OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun MainScreen(viewModel: MainViewModel) {
+    val navHostController = rememberNavController()
+
     Scaffold(
         bottomBar = {
             BottomNavigation {
-                val selectedItemPosition = remember {
-                    mutableStateOf(0)
-                }
+                val navBackStackEntry by navHostController.currentBackStackEntryAsState() //тут будет сохраняться текущий экран
+                val currentRoute =
+                    navBackStackEntry?.destination?.route //когда state navBackStack изменится произойдёт рекомпозиция и я получу Route который открыт и обновится BottomNavItem
                 val items = listOf(
                     NavigationItem.Home,
                     NavigationItem.Favorite,
-                    NavigationItem.Person
+                    NavigationItem.Profile
                 )
-                items.forEachIndexed { index, item ->
+                items.forEach { navigationItem ->
                     BottomNavigationItem(
-                        selected = selectedItemPosition.value == index,
-                        onClick = { selectedItemPosition.value = index },
+                        selected = currentRoute == navigationItem.screen.route, //так-же обновится Selected у того элемента который сейчас открыт и виден
+                        onClick = { navHostController.navigate(navigationItem.screen.route) },
                         icon = {
-                            Icon(item.icon, contentDescription = "null")
+                            Icon(navigationItem.icon, contentDescription = "null")
                         },
                         label = {
-                            Text(text = stringResource(item.titleResId))
+                            Text(text = stringResource(navigationItem.titleResId))
                         },
                         selectedContentColor = MaterialTheme.colors.onPrimary,
                         unselectedContentColor = MaterialTheme.colors.onSecondary
@@ -48,44 +45,25 @@ fun MainScreen(viewModel: MainViewModel) {
             }
         }
     ) {
-        val feedPosts = viewModel.feedPosts.observeAsState(listOf())
-
-        LazyColumn(
-            contentPadding = PaddingValues(
-                bottom = 60.dp
-            )
-        ) {
-            items(
-                items = feedPosts.value,
-                key = { it.id }
-            ) { feedPost -> //ОБЯЗАТЕЛЬНО НУЖЕН КЛЮЧ ДЛЯ УДАЛЕНИЯ ТОЛЬКО ОДНОГО ЭЛЕМЕНТА
-                val dismissState = rememberDismissState()
-                if (dismissState.isDismissed(DismissDirection.EndToStart)) {
-                    viewModel.remove(feedPost)
-                }
-                SwipeToDismiss(
-                    modifier = Modifier.animateItemPlacement(),
-                    state = dismissState,
-                    background = {},
-                    directions = setOf(DismissDirection.EndToStart)
-                ) {
-                    PostCard(
-                        feedPost = feedPost,
-                        onViewsClickListener = { statisticItem ->
-                            viewModel.updateCount(feedPost, statisticItem)
-                        },
-                        onShareClickListener = { statisticItem ->
-                            viewModel.updateCount(feedPost, statisticItem)
-                        },
-                        onCommentClickListener = { statisticItem ->
-                            viewModel.updateCount(feedPost, statisticItem)
-                        },
-                        onLikeClickListener = { statisticItem ->
-                            viewModel.updateCount(feedPost, statisticItem)
-                        }
-                    )
-                }
-            }
-        }
+        AppNavGraph(
+            navController = navHostController,
+            homeScreenContent = { HomeScreen(viewModel = viewModel) },
+            favoriteScreenContent = { TextCounter(name = "Favorite") },
+            profileScreenContent = { TextCounter(name = "Profile") }
+        )
     }
+}
+
+@Composable
+fun TextCounter(name: String) {
+    var count by remember {
+        mutableStateOf(0)
+    }
+    Text(
+        modifier = Modifier.clickable {
+            count++
+        },
+        text = "$name Count: $count",
+        color = Color.Black
+    )
 }
