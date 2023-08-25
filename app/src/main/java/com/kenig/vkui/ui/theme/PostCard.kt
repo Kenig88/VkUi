@@ -56,9 +56,8 @@ fun PostCard(
                 onLikeClickListener = onLikeClickListener,
                 onCommentClickListener = onCommentClickListener,
                 onShareClickListener = onShareClickListener,
-                onViewsClickListener = onViewsClickListener,
-
-                )
+                onViewsClickListener = onViewsClickListener
+            )
         }
     }
 }

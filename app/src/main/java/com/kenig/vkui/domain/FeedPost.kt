@@ -3,6 +3,7 @@ package com.kenig.vkui.domain
 import com.kenig.vkui.R
 
 data class FeedPost(
+    val id: Int = 0,
     val communityName: String = "Moto",
     val publicationDate: String = "12:13",
     val avatarResId: Int = R.drawable.suzuki,
